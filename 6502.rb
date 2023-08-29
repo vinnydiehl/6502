@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Numeric
-  def hex
-    "0x#{to_s(16)}"
+  def hex(bytes=1)
+    "0x#{to_s(16).rjust(bytes * 2, '0')}"
   end
 end
 
@@ -27,11 +27,10 @@ class Memory
     (0...MAX).step(columns).map do |row_start|
       row = @data.slice(row_start, columns)
 
-      row_start_address_str = "0x#{row_start.to_s(16).rjust(8, '0')}"
       hex_row = row.map { |byte| byte.to_s(16).rjust(2, "0") }.join(" ")
       ascii_row = row.map { |byte| byte >= 32 && byte <= 126 ? byte.chr : "." }.join
 
-      "#{row_start_address_str} | #{hex_row} | #{ascii_row}"
+      "#{row_start.hex(4)} | #{hex_row} | #{ascii_row}"
     end.join("\n")
   end
 end
@@ -109,14 +108,14 @@ class CPU
 
   def to_s
     <<~EOS
-      Program counter: #{@pc.hex}
+      Program counter: #{@pc.hex(2)}
       Stack pointer: #{@sp.hex}
       Registers:
         A: #{@ra.hex}
         X: #{@rx.hex}
         Y: #{@ry.hex}
       Flags:
-      #{@flags.map { |k, v| "  #{k.upcase}: #{v}" }.join("\n")}
+      #{@flags.map { |k, v| "  #{k.upcase}: #{v ? 1 : 0}" }.join("\n")}
     EOS
   end
 
