@@ -52,8 +52,8 @@ class CPU
   def reset
     # Program counter
     @pc = 0xfffc
-    # Stack pointer
-    @sp = 0x0100
+    # Stack pointer (low 8 bits; 0 points to 0x0100)
+    @sp = 0
     # Registers: accumulator, x, and y
     @ra = @rx = @ry = 0
 
@@ -93,6 +93,18 @@ class CPU
     }
 
     @memory.reset
+  end
+
+  def stack_ptr
+    0x100 + @sp
+  end
+
+  def stack_push(bytes)
+    @sp -= bytes
+  end
+
+  def stack_pull(bytes)
+    @sp += bytes
   end
 
   def to_s
@@ -177,8 +189,8 @@ class CPU
         lda_set_flags
       when INS[:JSR]
         jump_address = fetch_word
-        write_word(@sp, @pc - 1)
-        @sp += 2
+        write_word(stack_ptr, @pc - 1)
+        stack_pull(2)
 
         @pc = jump_address
         @clock -= 1
